@@ -1,0 +1,106 @@
+<script src="https://unpkg.com/vue@3"></script>
+<script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+
+<div id="app">
+  <form id="form">
+      <div>
+          <input ref="file" type="file" v-on:change="upload()" style="display: none" />
+          <button type="button" @click="$refs.file.click()">檔案上傳</button>
+      </div>
+  </form>
+  <table class="table">
+    <thead>
+      <tr>
+        <th scope="col">fileName</th>
+        <th scope="col">Download</th>
+        <th scope="col">Delete</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr v-for="file in file_list" :key="file.name">
+        <td>{{file.name}}</td>
+        <td><button type="submit" @click="download(file.name)">下載檔案</button></td>
+        <td><button type="submit" @click="del(file.name)">刪除檔案</button></td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<script>
+  const { createApp } = Vue
+
+  createApp({
+    data() {
+      return {
+        file_list: [],
+        href:''
+      }
+    },
+    mounted() {
+      this.get_file_list();
+    },
+    methods: {
+      get_file_list:function() {
+          axios
+            .get("http://127.0.0.1:3030/file_list").then((res) => {
+              let result = res.data;
+              this.file_list = [];
+              for (let i = 0; i < result.length; i++) {
+                this.file_list.push({
+                  name:result[i]
+                })
+              }
+            })
+            .catch((error) =>{
+              console.log(error)
+            })
+      },
+
+      upload:function (e) {
+        let file = this.file = this.$refs.file.files[0];
+        let formData = new FormData();
+        formData.append("file", file);
+        axios
+          .post("http://127.0.0.1:3030/upload", formData).then((res) => {
+            alert('上傳成功');
+            this.get_file_list();
+          })
+          .catch((error) =>{
+            console.log(error)
+          })
+      },
+
+      download: function (file) {
+        let data = {
+          file_name : file
+        }
+        axios
+          .post("http://127.0.0.1:3030/download", data, {responseType: 'blob'}).then((res) => {
+            var blob = new Blob([res.data]);
+            var url = window.URL.createObjectURL(blob);
+            var a = document.createElement("a");
+            a.href = url;
+            a.download = file;
+            a.click();
+            window.URL.revokeObjectURL(url);
+            alert('下載開始');
+            this.get_file_list();
+          })
+          .catch((error) =>{
+            console.log(error)
+          })
+      },
+
+      del: function (file) {
+        axios
+          .delete("http://127.0.0.1:3030/"+file).then((res) => {
+            alert('刪除成功');
+            this.get_file_list();
+          })
+          .catch((error) =>{
+            console.log(error)
+          })
+      },
+    },
+  }).mount('#app')
+</script>
