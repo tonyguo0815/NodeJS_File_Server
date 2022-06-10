@@ -16,3 +16,20 @@ Project
 │   server.js           #程式進入點,啟動api server
 
 ```
+
+## Project Setup
+
+```sh
+npm install
+```
+
+## Compile Development
+
+```sh
+npm run start
+```
+
+
+```sh
+http://127.0.0.1:3030
+```
